@@ -70,7 +70,7 @@ export async function importRecipe(rawUrl) {
     signal: AbortSignal.timeout(10000),
   })
   if (res.status === 403 || res.status === 429) {
-    throw new Error("That site blocks apps from reading its recipes. Type this one in instead.")
+    throw new Error("That site blocks apps from reading its recipes.")
   }
   if (!res.ok) throw new Error(`The site answered with an error (${res.status}).`)
   const html = (await res.text()).slice(0, 3_000_000)

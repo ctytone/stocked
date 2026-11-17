@@ -95,6 +95,44 @@ function AddSheet({ onClose, onReady }: { onClose: () => void; onReady: (d: Draf
   const [url, setUrl] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [pasting, setPasting] = useState(false)
+  const [pasted, setPasted] = useState('')
+
+  /** Turn a pasted ingredient list (one per line, bullets and checkboxes allowed) into rows. */
+  const fromPaste = () => {
+    const lines = pasted
+      .split(/\r?\n/)
+      .map((l) => l.replace(/^[\s•\-*▢☐□✓]+/, '').trim())
+      .filter((l) => l.length > 1 && !/^ingredients:?$/i.test(l))
+    onReady({
+      name: '',
+      url: url.trim() || undefined,
+      makes: '1',
+      rows: lines.length ? lines.map((text) => newRow({ text, itemId: guessItem(text, items) })) : [newRow()],
+    })
+  }
+
+  if (pasting) {
+    return (
+      <Sheet title="Paste ingredients" onClose={onClose}>
+        <div className="form">
+          <p className="muted">Copy the ingredient list from the recipe page and paste it here, one ingredient per line.</p>
+          <textarea
+            className="paste"
+            rows={8}
+            value={pasted}
+            onChange={(e) => setPasted(e.target.value)}
+            placeholder={'1 lb ground beef\n1 jar marinara\n8 oz spaghetti'}
+            autoFocus
+          />
+          <div className="actions">
+            <button className="btn ghost" onClick={() => setPasting(false)}>Back</button>
+            <button className="btn primary" disabled={!pasted.trim()} onClick={fromPaste}>Next</button>
+          </div>
+        </div>
+      </Sheet>
+    )
+  }
 
   const importLink = async () => {
     setBusy(true)
@@ -127,10 +165,16 @@ function AddSheet({ onClose, onReady }: { onClose: () => void; onReady: (d: Draf
           Paste a recipe link
           <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" autoFocus />
         </label>
-        {error && <p className="warn-text">{error}</p>}
+        {error && (
+          <p className="warn-text">
+            {error}{' '}
+            <button type="button" className="text-btn" onClick={() => setPasting(true)}>Paste the ingredients instead</button>
+          </p>
+        )}
         <button className="btn primary" disabled={!url.trim() || busy}>{busy ? 'Reading the page…' : 'Import'}</button>
       </form>
       <div className="or"><span>or</span></div>
+      <button className="btn ghost full" onClick={() => setPasting(true)}>Paste the ingredient list</button>
       <button className="btn ghost full" onClick={() => onReady({ name: '', makes: '1', rows: [newRow()] })}>
         Type it in
       </button>
