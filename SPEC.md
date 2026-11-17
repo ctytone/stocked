@@ -1,4 +1,4 @@
-# Meal Planner — v1 Spec
+# Stocked — v1 Spec
 
 A phone-first web app: plan a week of meals, track pantry servings, and get a Sunday shopping list.
 

@@ -1,4 +1,4 @@
-# Meal Planner
+# Stocked
 
 Plan your week of meals, track pantry servings, and get a Sunday shopping list that only tells you to buy
 a package when you'll actually run out. See [SPEC.md](SPEC.md) for how it works.
@@ -26,7 +26,7 @@ a package when you'll actually run out. See [SPEC.md](SPEC.md) for how it works.
    confirmation and password-reset emails link back to the app.
 
 **2. GitHub + Vercel (hosting)**
-1. Push this folder to a GitHub repo named `meal-planner`.
+1. Push this folder to a GitHub repo named `stocked`.
 2. vercel.com → Add New → Project → pick the repo.
 3. Before deploying, add Environment Variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (from step 1.3).
 4. Deploy. Every push to `main` redeploys. `api/import.js` becomes the link-import service.

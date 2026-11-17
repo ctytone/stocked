@@ -154,7 +154,7 @@ export const useStore = create<AppData & Actions>()(
       },
     }),
     {
-      name: 'meal-planner-v1',
+      name: 'stocked-v1',
       storage: createJSONStorage(() => safeStorage),
       partialize: (s) => ({ items: s.items, recipes: s.recipes, meals: s.meals, purchases: s.purchases }),
     },

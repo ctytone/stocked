@@ -59,7 +59,7 @@ export function parseRecipe(html) {
 export async function importRecipe(rawUrl) {
   const url = checkUrl(rawUrl)
   const res = await fetch(url, {
-    headers: { 'user-agent': 'Mozilla/5.0 (compatible; MealPlanner/1.0)', accept: 'text/html' },
+    headers: { 'user-agent': 'Mozilla/5.0 (compatible; Stocked/1.0)', accept: 'text/html' },
     redirect: 'follow',
     signal: AbortSignal.timeout(10000),
   })

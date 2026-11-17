@@ -1,6 +1,6 @@
 {
-  "name": "Meal Planner",
-  "short_name": "Meals",
+  "name": "Stocked",
+  "short_name": "Stocked",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f6f1e8",
