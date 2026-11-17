@@ -59,10 +59,19 @@ export function parseRecipe(html) {
 export async function importRecipe(rawUrl) {
   const url = checkUrl(rawUrl)
   const res = await fetch(url, {
-    headers: { 'user-agent': 'Mozilla/5.0 (compatible; Stocked/1.0)', accept: 'text/html' },
+    // Many recipe sites turn away requests that don't look like a normal browser.
+    headers: {
+      'user-agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'accept-language': 'en-US,en;q=0.9',
+    },
     redirect: 'follow',
     signal: AbortSignal.timeout(10000),
   })
+  if (res.status === 403 || res.status === 429) {
+    throw new Error("That site blocks apps from reading its recipes. Type this one in instead.")
+  }
   if (!res.ok) throw new Error(`The site answered with an error (${res.status}).`)
   const html = (await res.text()).slice(0, 3_000_000)
   const recipe = parseRecipe(html)
