@@ -42,6 +42,29 @@ function parseYield(y) {
   return 1
 }
 
+/** recipeInstructions can be a string, a list of strings, HowToSteps, or HowToSections of steps. */
+function parseSteps(node) {
+  const out = []
+  const visit = (n) => {
+    if (!n) return
+    if (typeof n === 'string') {
+      for (const part of n.split(/<\/(?:p|li)>|<br\s*\/?>|\n/i)) {
+        const line = decode(part)
+        if (line) out.push(line)
+      }
+      return
+    }
+    if (Array.isArray(n)) { n.forEach(visit); return }
+    if (typeof n === 'object') {
+      if (n.itemListElement) visit(n.itemListElement)
+      else if (n.text) visit(String(n.text))
+      else if (n.name) visit(String(n.name))
+    }
+  }
+  visit(node)
+  return out.slice(0, 60)
+}
+
 export function parseRecipe(html) {
   const blocks = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
   for (const [, body] of blocks) {
@@ -50,7 +73,7 @@ export function parseRecipe(html) {
     for (const node of walk(json)) {
       if (!isRecipe(node)) continue
       const ingredients = (node.recipeIngredient ?? node.ingredients ?? []).map(decode).filter(Boolean)
-      return { name: decode(node.name ?? ''), makes: parseYield(node.recipeYield), ingredients }
+      return { name: decode(node.name ?? ''), makes: parseYield(node.recipeYield), ingredients, steps: parseSteps(node.recipeInstructions) }
     }
   }
   return null

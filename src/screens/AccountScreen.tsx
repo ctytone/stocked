@@ -24,13 +24,13 @@ export function AccountScreen() {
       </header>
 
       {!supabase ? (
-        <div className="card empty">
+        <div className="surface empty">
           <p>This copy of the app saves your plan in this browser only. Accounts turn on once the app is hosted with Supabase.</p>
         </div>
       ) : recovering && session ? (
         <NewPassword />
       ) : session ? (
-        <div className="card empty">
+        <div className="surface empty">
           <p>Signed in as <strong>{session.user.email}</strong>. Your plan syncs between your phone and computer.</p>
           {status === 'error' && <p className="warn-text">{error}</p>}
           <button className="btn ghost" onClick={signOut}>Sign out</button>
@@ -40,7 +40,7 @@ export function AccountScreen() {
       )}
 
       <h2 className="section-label">Put it on your home screen</h2>
-      <div className="card empty">
+      <div className="surface empty">
         <p><strong>iPhone:</strong> open this site in Safari → Share → <em>Add to Home Screen</em>.</p>
         <p><strong>Android:</strong> open it in Chrome → ⋮ menu → <em>Add to Home screen</em>.</p>
       </div>
@@ -81,7 +81,7 @@ function SignIn() {
   }
 
   return (
-    <div className="card empty">
+    <div className="surface empty">
       <p>
         {mode === 'up'
           ? 'Create an account to sync your plan between your phone and computer. Anything already on this device gets saved to it.'
@@ -125,7 +125,7 @@ function NewPassword() {
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
   return (
-    <div className="card empty">
+    <div className="surface empty">
       <p>Choose a new password.</p>
       <form
         className="form"

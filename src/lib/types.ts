@@ -13,12 +13,17 @@ export interface Item {
   stock: number
   /** Set when this item is a cooked batch of a recipe. */
   batchOf?: string
+  /** Created automatically (e.g. from a recipe import) with a guessed package size — worth a quick check. */
+  needsReview?: boolean
 }
 
 export interface Ingredient {
-  itemId: string
+  /** Pantry item this ingredient comes out of. Missing = not tracked (salt, oil…). */
+  itemId?: string
   /** Servings of the item the whole recipe uses. */
   servings: number
+  /** The line as written in the recipe, e.g. "1 lb ground beef". */
+  text?: string
 }
 
 export interface Recipe {
@@ -28,6 +33,8 @@ export interface Recipe {
   /** How many meals one batch of this recipe makes. */
   makes: number
   ingredients: Ingredient[]
+  /** Cooking steps, in order. */
+  steps?: string[]
   notes?: string
 }
 

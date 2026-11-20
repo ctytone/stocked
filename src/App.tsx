@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useStore } from './store'
 import { refresh, useCloudSync, useSync } from './sync'
 import { WeekScreen } from './screens/WeekScreen'
@@ -6,23 +6,24 @@ import { RecipesScreen } from './screens/RecipesScreen'
 import { PantryScreen } from './screens/PantryScreen'
 import { ShopScreen } from './screens/ShopScreen'
 import { AccountScreen } from './screens/AccountScreen'
+import { useUi, type Tab } from './ui'
+import { Icon } from './components/Icon'
 
-type Tab = 'week' | 'recipes' | 'pantry' | 'shop' | 'account'
-
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'week', label: 'Week', icon: '▦' },
-  { id: 'recipes', label: 'Recipes', icon: '☰' },
-  { id: 'pantry', label: 'Pantry', icon: '◫' },
-  { id: 'shop', label: 'Shop', icon: '✓' },
-  { id: 'account', label: 'Account', icon: '◯' },
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'week', label: 'Week' },
+  { id: 'recipes', label: 'Recipes' },
+  { id: 'pantry', label: 'Pantry' },
+  { id: 'shop', label: 'Shop' },
+  { id: 'account', label: 'Account' },
 ]
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('week')
+  const tab = useUi((s) => s.tab)
+  const setTab = useUi((s) => s.go)
   const tick = useStore((s) => s.tick)
   useCloudSync()
   const recovering = useSync((s) => s.recovering)
-  useEffect(() => { if (recovering) setTab('account') }, [recovering])
+  useEffect(() => { if (recovering) setTab('account') }, [recovering, setTab])
 
   // On open and whenever the app comes back on screen: get the latest from the cloud (if signed in),
   // then mark yesterday's planned meals as eaten. A timer catches midnight while the app stays open.
@@ -38,7 +39,7 @@ export default function App() {
   }, [tick])
 
   return (
-    <div className="app">
+    <div className={`app${tab === 'week' ? ' wide' : ''}`}>
       <main className="screen">
         {tab === 'week' && <WeekScreen />}
         {tab === 'recipes' && <RecipesScreen />}
@@ -46,10 +47,15 @@ export default function App() {
         {tab === 'shop' && <ShopScreen />}
         {tab === 'account' && <AccountScreen />}
       </main>
-      <nav className="tabbar">
+      <nav className="tabbar" aria-label="Main">
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'tab active' : 'tab'} onClick={() => setTab(t.id)}>
-            <span className="tab-icon" aria-hidden>{t.icon}</span>
+          <button
+            key={t.id}
+            className={tab === t.id ? 'tab active' : 'tab'}
+            aria-current={tab === t.id ? 'page' : undefined}
+            onClick={() => setTab(t.id)}
+          >
+            <span className="tab-icon"><Icon name={t.id} /></span>
             {t.label}
           </button>
         ))}

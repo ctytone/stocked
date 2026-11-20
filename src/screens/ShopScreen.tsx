@@ -29,11 +29,11 @@ export function ShopScreen() {
       </header>
 
       {lines.length === 0 ? (
-        <div className="empty card">
+        <div className="empty surface">
           <p><strong>Nothing to buy.</strong> Your pantry covers every meal planned through {label(end, { weekday: 'long' })}.</p>
         </div>
       ) : (
-        <div className="card list">
+        <div className="surface list">
           {lines.map(({ item, short, packages }) => (
             <label key={item.id} className="shop-row">
               <input type="checkbox" checked={false} onChange={() => buy(item.id, packages)} />
@@ -53,7 +53,7 @@ export function ShopScreen() {
       {boughtToday.length > 0 && (
         <section>
           <h2 className="section-label">Bought today</h2>
-          <div className="card list">
+          <div className="surface list">
             {boughtToday.map((p) => {
               const it = items.find((i) => i.id === p.itemId)
               return (
@@ -74,7 +74,7 @@ export function ShopScreen() {
       {low.length > 0 && (
         <section>
           <h2 className="section-label">Running low (not needed this week)</h2>
-          <div className="card list">
+          <div className="surface list">
             {low.map((it) => (
               <div key={it.id} className="shop-row">
                 <span className={`dot ${stockLevel(it)}`} />

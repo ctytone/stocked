@@ -17,6 +17,7 @@ export function rawUse(recipe: Recipe): Record<string, number> {
   const use: Record<string, number> = {}
   const makes = recipe.makes > 0 ? recipe.makes : 1
   for (const ing of recipe.ingredients) {
+    if (!ing.itemId) continue
     use[ing.itemId] = (use[ing.itemId] ?? 0) + ing.servings / makes
   }
   return use
@@ -111,32 +112,41 @@ export function consumePastMeals(data: AppData, today: string): AppData {
   }
 }
 
+/** Take one meal's servings out of the pantry (never below zero) and record what was taken. */
+function takeMeal(data: AppData, meal: Meal): AppData {
+  const items = data.items.map((it) => ({ ...it }))
+  const byId = new Map(items.map((i) => [i.id, i]))
+  const stock: Record<string, number> = {}
+  for (const it of items) stock[it.id] = it.stock
+  const used: Record<string, number> = {}
+  for (const [itemId, n] of Object.entries(mealUse(meal, data, stock))) {
+    const it = byId.get(itemId)
+    if (!it) continue
+    const take = Math.min(n, Math.max(0, it.stock))
+    it.stock = round(it.stock - take)
+    used[itemId] = take
+  }
+  const next: Meal = { ...meal, status: 'eaten', used }
+  return { ...data, items, meals: data.meals.map((m) => (m.id === meal.id ? next : m)) }
+}
+
+/** "I ate it": a planned meal comes out of the pantry right now instead of waiting for the day to end. */
+export function eatMeal(data: AppData, mealId: string): AppData {
+  const meal = data.meals.find((m) => m.id === mealId)
+  if (!meal || meal.status !== 'planned') return data
+  return takeMeal(data, meal)
+}
+
 /** "Didn't eat it": put the servings back. Calling it again re-marks it eaten. */
 export function toggleSkipped(data: AppData, mealId: string): AppData {
   const meal = data.meals.find((m) => m.id === mealId)
   if (!meal || meal.status === 'planned') return data
-  const items = data.items.map((it) => ({ ...it }))
-  const byId = new Map(items.map((i) => [i.id, i]))
-  let next: Meal
-  if (meal.status === 'eaten') {
-    for (const [itemId, n] of Object.entries(meal.used ?? {})) {
-      const it = byId.get(itemId)
-      if (it) it.stock = round(it.stock + n)
-    }
-    next = { ...meal, status: 'skipped' }
-  } else {
-    const stock: Record<string, number> = {}
-    for (const it of items) stock[it.id] = it.stock
-    const used: Record<string, number> = {}
-    for (const [itemId, n] of Object.entries(mealUse(meal, data, stock))) {
-      const it = byId.get(itemId)
-      if (!it) continue
-      const take = Math.min(n, Math.max(0, it.stock))
-      it.stock = round(it.stock - take)
-      used[itemId] = take
-    }
-    next = { ...meal, status: 'eaten', used }
-  }
+  if (meal.status === 'skipped') return takeMeal(data, meal)
+  const items = data.items.map((it) => {
+    const n = meal.used?.[it.id]
+    return n ? { ...it, stock: round(it.stock + n) } : it
+  })
+  const next: Meal = { ...meal, status: 'skipped' }
   return { ...data, items, meals: data.meals.map((m) => (m.id === mealId ? next : m)) }
 }
 
@@ -146,7 +156,7 @@ export function cookBatch(data: AppData, recipeId: string, newId: () => string):
   if (!recipe) return data
   const items = data.items.map((it) => ({ ...it }))
   for (const ing of recipe.ingredients) {
-    const it = items.find((i) => i.id === ing.itemId)
+    const it = ing.itemId ? items.find((i) => i.id === ing.itemId) : undefined
     if (it) it.stock = round(Math.max(0, it.stock - ing.servings))
   }
   const batch = items.find((i) => i.batchOf === recipe.id)

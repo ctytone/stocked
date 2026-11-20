@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AppData, Meal } from './types'
-import { allocate, consumePastMeals, cookBatch, shoppingList, stockLevel, toggleSkipped } from './planner'
+import { allocate, consumePastMeals, cookBatch, eatMeal, shoppingList, stockLevel, toggleSkipped } from './planner'
 import { defaultWeekStart, mondayOf, shoppingEnd } from './dates'
 
 const yogurt = { id: 'yog', name: 'Yogurt', location: 'fridge' as const, servingsPerPackage: 8, stock: 0 }
@@ -107,5 +107,24 @@ describe('stock colors', () => {
     expect(stockLevel({ ...yogurt, stock: 5 })).toBe('ok')
     expect(stockLevel({ ...yogurt, stock: 3 })).toBe('low')
     expect(stockLevel({ ...yogurt, stock: 0 })).toBe('out')
+  })
+})
+
+describe('eating a meal now', () => {
+  it('takes servings out right away, and "did not eat it" puts them back', () => {
+    const m = meal(week[0], 'breakfast', 'item', 'yog')
+    const eaten = eatMeal(base([m], { yog: 3 }), m.id)
+    expect(eaten.items.find((i) => i.id === 'yog')?.stock).toBe(2)
+    expect(eaten.meals[0].status).toBe('eaten')
+    const undone = toggleSkipped(eaten, m.id)
+    expect(undone.items.find((i) => i.id === 'yog')?.stock).toBe(3)
+    expect(undone.meals[0].status).toBe('skipped')
+  })
+
+  it('ignores untracked recipe lines', () => {
+    const dip = { id: 'dip', name: 'Dip', makes: 2, ingredients: [{ itemId: 'beef', servings: 2 }, { servings: 1, text: 'salt' }] }
+    const m = meal(week[0], 'dinner', 'recipe', 'dip')
+    const data = { ...base([m], { beef: 4 }), recipes: [dip] }
+    expect(eatMeal(data, m.id).items.find((i) => i.id === 'beef')?.stock).toBe(3)
   })
 })

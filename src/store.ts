@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { AppData, Item, Meal, MealType, Recipe } from './lib/types'
-import { consumePastMeals, cookBatch, round, toggleSkipped } from './lib/planner'
+import { consumePastMeals, cookBatch, eatMeal, round, toggleSkipped } from './lib/planner'
 import { addDays, defaultWeekStart, todayKey } from './lib/dates'
 
 export const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4)
@@ -23,6 +23,7 @@ interface Actions {
   planMeal: (dates: string[], meal: MealType, kind: Meal['kind'], refId: string) => void
   removeMeal: (id: string) => void
   toggleSkip: (id: string) => void
+  eat: (id: string) => void
   buy: (itemId: string, packages: number) => void
   undoPurchase: (id: string) => void
   cook: (recipeId: string) => void
@@ -61,7 +62,8 @@ export const useStore = create<AppData & Actions>()(
       deleteItem: (id) =>
         set((s) => ({
           items: s.items.filter((i) => i.id !== id),
-          recipes: s.recipes.map((r) => ({ ...r, ingredients: r.ingredients.filter((g) => g.itemId !== id) })),
+          // Keep the recipe line, just stop tracking it.
+          recipes: s.recipes.map((r) => ({ ...r, ingredients: r.ingredients.map((g) => (g.itemId === id ? { ...g, itemId: undefined } : g)) })),
           meals: s.meals.filter((m) => !(m.kind === 'item' && m.refId === id && m.status === 'planned')),
         })),
 
@@ -94,6 +96,8 @@ export const useStore = create<AppData & Actions>()(
       removeMeal: (id) => set((s) => ({ meals: s.meals.filter((m) => m.id !== id) })),
 
       toggleSkip: (id) => set((s) => toggleSkipped(s, id)),
+
+      eat: (id) => set((s) => eatMeal(s, id)),
 
       buy: (itemId, packages) =>
         set((s) => {
